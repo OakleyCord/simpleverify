@@ -1,4 +1,4 @@
-package dev.oakleycord;
+package dev.oakleycord.simpleverify;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -23,7 +23,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Timer;
 
 public class Main extends ListenerAdapter {
 

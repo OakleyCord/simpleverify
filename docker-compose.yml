@@ -1,0 +1,12 @@
+version: '3.5'
+
+services:
+  simpleverify:
+    build: .
+    restart: unless-stopped
+    container_name: simpleverify
+    environment:
+      - BOT_TOKEN="YOURTOKENHERE"
+    volumes:
+      - ./guilds.json:/app/guilds.json
+

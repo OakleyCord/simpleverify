@@ -1,4 +1,4 @@
-package dev.oakleycord;
+package dev.oakleycord.simpleverify;
 
 import com.google.gson.Gson;
 import net.dv8tion.jda.api.JDA;
