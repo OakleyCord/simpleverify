@@ -6,7 +6,7 @@ Invite Bot: [Invite](https://discord.com/oauth2/authorize?client_id=955503433803
 
 ## Commands
 
-All commands for this bot are admins only, there are currently only two commands `/configure` and `/showconfiguration`.
+All commands for this bot are admins only, there are currently only two commands: `/configure` and `/showconfiguration`.
 
 ### /configure
 The command for setting up the bot, you can put idividual options to change specific options.
