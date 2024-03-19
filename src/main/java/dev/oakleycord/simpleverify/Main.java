@@ -27,6 +27,7 @@ import java.util.List;
 public class Main extends ListenerAdapter {
 
 
+    //TODO: use maps instead of list
     private static final List<GuildVerifyOptions> GUILDS = new ArrayList<>();
     private static final File GUILDS_FILE = new File("guilds.json");
 
@@ -57,8 +58,13 @@ public class Main extends ListenerAdapter {
                 Commands.slash("configure", "Configure Verify Options.")
                         .addOption(OptionType.STRING, "message", "The message used for verification.")
                         .addOption(OptionType.ROLE, "role", "The role to give to verified users.")
+                        .addOption(OptionType.ROLE, "removerole", "The role to remove once verified.")
                         .addOptions(
                                 new OptionData(OptionType.CHANNEL, "channel", "The channel to watch for messages.")
+                                        .setChannelTypes(ChannelType.TEXT)
+                        )
+                        .addOptions(
+                                new OptionData(OptionType.CHANNEL, "logchannel", "The channel to log verifications.")
                                         .setChannelTypes(ChannelType.TEXT)
                         )
                         .setGuildOnly(true)
@@ -109,7 +115,7 @@ public class Main extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         Guild guild = event.getGuild();
-        if (!GUILDS.stream().anyMatch(opt -> opt.getGuildID() == guild.getIdLong()))
+        if (GUILDS.stream().noneMatch(opt -> opt.getGuildID() == guild.getIdLong()))
             return;
 
         GuildVerifyOptions options = GUILDS.stream().filter(opt -> opt.getGuildID() == guild.getIdLong()).findFirst().get();
@@ -131,6 +137,10 @@ public class Main extends ListenerAdapter {
 
         event.getGuild().addRoleToMember(event.getAuthor(), options.getRole(event.getJDA())).queue();
 
+        Role removeRole = options.getRemoveRole(event.getJDA());
+        if (removeRole != null)
+            event.getGuild().removeRoleFromMember(event.getAuthor(), removeRole).queue();
+
         event.getChannel().sendMessage(mention + " verified!").queue(msg -> {
             try {
                 // TODO: this is probably stupid
@@ -142,6 +152,8 @@ public class Main extends ListenerAdapter {
                 throw new RuntimeException(e);
             }
         });
+
+        AuditLogger.logVerified(event.getJDA(), options, event.getAuthor());
     }
 
     @Override
@@ -170,18 +182,28 @@ public class Main extends ListenerAdapter {
             return;
         }
 
-        if (!GUILDS.stream().anyMatch(opt -> opt.getGuildID() == guild.getIdLong())) {
+        if (GUILDS.stream().noneMatch(opt -> opt.getGuildID() == guild.getIdLong())) {
             event.reply("Your server is not configured yet.").queue();
             return;
         }
 
         GuildVerifyOptions options = GUILDS.stream().filter(opt -> opt.getGuildID() == guild.getIdLong()).findFirst().get();
 
+        JDA jda = event.getJDA();
 
+        String verifyMessage = options.getVerifyMessage();
+        TextChannel channel = options.getChannel(jda);
+        TextChannel logChannel = options.getLogChannel(jda);
+        Role role = options.getRole(jda);
+        Role removeRole = options.getRemoveRole(jda);
+
+        // wow, this is horrid
         String message = "Configuration: \n";
-        message+= "Message: " + options.getVerifyMessage() + " \n";
-        message+= "Channel: #" + options.getChannel(event.getJDA()).getName() + " \n";
-        message+= "Role: " + options.getRole(event.getJDA()).getName() + " \n";
+        message+= "Message: " + verifyMessage + " \n";
+        message+= "Channel: " + channel.getAsMention() + " \n";
+        message+= "Log Channel: " + (logChannel == null ? "None" : logChannel.getAsMention()) + "\n";
+        message+= "Role: " + role.getName() + " \n";
+        message+= "Remove Role: " + (removeRole == null ? "None" : removeRole.getName()) + "\n";
 
         event.reply(message).queue();
     }
@@ -197,7 +219,11 @@ public class Main extends ListenerAdapter {
 
         TextChannel channel = null;
 
+        TextChannel logChannel = null;
+
         Role role = null;
+
+        Role removeRole = null;
 
         String message = null;
 
@@ -206,8 +232,16 @@ public class Main extends ListenerAdapter {
             channel = event.getOption("channel").getAsChannel().asTextChannel();
         }
 
+        if (event.getOption("logchannel") != null) {
+            logChannel = event.getOption("logchannel").getAsChannel().asTextChannel();
+        }
+
         if (event.getOption("role") != null) {
             role = event.getOption("role").getAsRole();
+        }
+
+        if (event.getOption("removerole") != null) {
+            removeRole = event.getOption("removerole").getAsRole();
         }
 
         if (event.getOption("message") != null) {
@@ -224,14 +258,21 @@ public class Main extends ListenerAdapter {
             if (channel != null)
                 options.setChannelID(channel.getIdLong());
 
+            if (logChannel != null)
+                options.setLogChannelID(logChannel.getIdLong());
+
             if (role != null)
                 options.setRoleID(role.getIdLong());
+
+            if (removeRole != null)
+                options.setRemoveRoleID(removeRole.getIdLong());
+
 
             saveGuilds();
         } else {
 
             if(message == null || channel == null || role == null) {
-                event.reply("When configuring for the first time you must include all options.").queue();
+                event.reply("When configuring for the first time you must include all options, except remove role.").queue();
                 return;
             }
 

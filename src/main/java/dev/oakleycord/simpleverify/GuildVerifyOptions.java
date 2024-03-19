@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 public class GuildVerifyOptions {
     private final long guildID;
 
-    private long channelID, roleID;
+    private long channelID, logChannelID, roleID, removeRoleID;
 
     private String verifyMessage;
 
@@ -21,21 +21,35 @@ public class GuildVerifyOptions {
     }
 
     public Guild getGuild(JDA jda) {
-        return jda.getGuildById(guildID);
+        return jda.getGuildById(this.getGuildID());
     }
 
     public Role getRole(JDA jda) {
-        Guild guild = jda.getGuildById(guildID);
+        Guild guild = jda.getGuildById(this.getGuildID());
         if (guild == null)
             throw new IllegalArgumentException();
-        return guild.getRoleById(roleID);
+        return guild.getRoleById(this.getRoleID());
+    }
+
+    public Role getRemoveRole(JDA jda) {
+        Guild guild = jda.getGuildById(this.getGuildID());
+        if (guild == null)
+            throw new IllegalArgumentException();
+        return guild.getRoleById(this.getRemoveRoleID());
     }
 
     public TextChannel getChannel(JDA jda) {
-        Guild guild = jda.getGuildById(guildID);
+        Guild guild = jda.getGuildById(this.getGuildID());
         if (guild == null)
             throw new IllegalArgumentException();
-        return guild.getTextChannelById(channelID);
+        return guild.getTextChannelById(this.getChannelID());
+    }
+
+    public TextChannel getLogChannel(JDA jda) {
+        Guild guild = jda.getGuildById(this.getGuildID());
+        if (guild == null)
+            throw new IllegalArgumentException();
+        return guild.getTextChannelById(this.getLogChannelID());
     }
 
     public long getGuildID() {
@@ -50,12 +64,27 @@ public class GuildVerifyOptions {
         this.channelID = channelID;
     }
 
+    public long getLogChannelID() {
+        return logChannelID;
+    }
+
+    public void setLogChannelID(Long channelID) {
+        this.logChannelID = channelID;
+    }
     public String getVerifyMessage() {
         return verifyMessage;
     }
 
     public void setVerifyMessage(String verifyMessage) {
         this.verifyMessage = verifyMessage;
+    }
+
+    public long getRemoveRoleID() {
+        return removeRoleID;
+    }
+
+    public void setRemoveRoleID(long roleID) {
+        this.removeRoleID = roleID;
     }
 
     public long getRoleID() {
