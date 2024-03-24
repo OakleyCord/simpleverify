@@ -8,6 +8,7 @@ import dev.oakleycord.simpleverify.commands.ShowConfigurationCommand;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -18,9 +19,7 @@ import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 
 public class SimpleVerifyMain extends ListenerAdapter {
 
@@ -52,6 +51,23 @@ public class SimpleVerifyMain extends ListenerAdapter {
                 ))
                 .addEventListeners(new SimpleVerifyMain())
                 .build();
+
+        Timer timer = new Timer();
+
+        timer.scheduleAtFixedRate(new TimerTask() {
+            final long start = System.currentTimeMillis();
+            @Override
+            public void run() {
+
+                long now = System.currentTimeMillis();
+                long diff = now - start;
+                long seconds = diff / 1000;
+                String uptime = String.format("%d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, (seconds % 60));
+
+                jda.getPresence().setActivity(Activity.customStatus("Uptime: " + uptime));
+            }
+        }, 5000,5000);
+
 
         CommandListUpdateAction commands = jda.updateCommands();
 

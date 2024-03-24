@@ -2,6 +2,7 @@ package dev.oakleycord.simpleverify.commands;
 
 import dev.oakleycord.simpleverify.GuildVerifyOptions;
 import dev.oakleycord.simpleverify.SimpleVerifyMain;
+import dev.oakleycord.simpleverify.Util;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -65,24 +66,9 @@ public class ShowConfigurationCommand extends SVSlashCommand {
             return;
         }
 
+        JDA jda = event.getJDA();
         GuildVerifyOptions options = guilds.stream().filter(opt -> opt.getGuildID() == guild.getIdLong()).findFirst().get();
 
-        JDA jda = event.getJDA();
-
-        String verifyMessage = options.getVerifyMessage();
-        TextChannel channel = options.getChannel(jda);
-        TextChannel logChannel = options.getLogChannel(jda);
-        Role role = options.getRole(jda);
-        Role removeRole = options.getRemoveRole(jda);
-
-        // wow, this is horrid
-        String message = "Configuration: \n";
-        message+= "Message: " + verifyMessage + " \n";
-        message+= "Channel: " + channel.getAsMention() + " \n";
-        message+= "Log Channel: " + (logChannel == null ? "None" : logChannel.getAsMention()) + "\n";
-        message+= "Role: " + role.getName() + " \n";
-        message+= "Remove Role: " + (removeRole == null ? "None" : removeRole.getName()) + "\n";
-
-        event.reply(message).queue();
+        event.replyEmbeds(Util.createConfigurationEmbed(jda, options)).queue();
     }
 }

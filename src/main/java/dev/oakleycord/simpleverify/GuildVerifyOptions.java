@@ -6,7 +6,9 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
-public class GuildVerifyOptions {
+import java.util.Objects;
+
+public class GuildVerifyOptions implements Cloneable {
     private final long guildID;
     private String verifyMessage;
     private long channelID, logChannelID, roleID, removeRoleID;
@@ -101,5 +103,27 @@ public class GuildVerifyOptions {
     public static GuildVerifyOptions fromJson(String string) {
         Gson gson = new Gson();
         return gson.fromJson(string, GuildVerifyOptions.class);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GuildVerifyOptions options = (GuildVerifyOptions) o;
+        return getGuildID() == options.getGuildID() && getChannelID() == options.getChannelID() && getLogChannelID() == options.getLogChannelID() && getRoleID() == options.getRoleID() && getRemoveRoleID() == options.getRemoveRoleID() && Objects.equals(getVerifyMessage(), options.getVerifyMessage());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getGuildID(), getVerifyMessage(), getChannelID(), getLogChannelID(), getRoleID(), getRemoveRoleID());
+    }
+
+    @Override
+    public GuildVerifyOptions clone() {
+        try {
+            return (GuildVerifyOptions) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

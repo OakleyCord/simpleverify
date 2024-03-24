@@ -2,6 +2,7 @@ package dev.oakleycord.simpleverify.commands;
 
 import dev.oakleycord.simpleverify.GuildVerifyOptions;
 import dev.oakleycord.simpleverify.SimpleVerifyMain;
+import dev.oakleycord.simpleverify.Util;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -118,13 +119,14 @@ public class ConfigureCommand extends SVSlashCommand {
             options = guilds.stream().filter(opt -> opt.getGuildID() == guild.getIdLong()).findFirst().get();
         } else {
             if(message == null || channel == null || role == null) {
-                //TODO: fix this whole thing up so weird stuff like this doesn't happen
                 event.reply("When configuring for the first time you must include message, channel and role options.").queue();
                 return;
             }
             options = new GuildVerifyOptions(guild.getIdLong(), message, channel.getIdLong(), role.getIdLong());
             guilds.add(options);
         }
+
+        GuildVerifyOptions beforeOptions = options.clone();
 
         if (message != null)
             options.setVerifyMessage(message);
@@ -142,6 +144,6 @@ public class ConfigureCommand extends SVSlashCommand {
             options.setRemoveRoleID(removeRole.getIdLong());
 
         SimpleVerifyMain.saveGuilds();
-        event.reply("Configuration successfully updated!").queue();
+        event.replyEmbeds(Util.createDiffMessage(event.getJDA(), beforeOptions, options)).queue();
     }
 }
