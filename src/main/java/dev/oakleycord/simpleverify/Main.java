@@ -5,7 +5,9 @@ import com.google.gson.JsonArray;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -162,6 +164,12 @@ public class Main extends ListenerAdapter {
         if (event.getGuild() == null)
             return;
 
+        Member member = event.getMember();
+        // just to make sure no commands get somehow run by regular users
+        if (member == null || !member.hasPermission(Permission.ADMINISTRATOR))
+            return;
+
+
         switch (event.getName()) {
             case "configure":
                 configure(event);
@@ -272,6 +280,7 @@ public class Main extends ListenerAdapter {
         } else {
 
             if(message == null || channel == null || role == null) {
+                //TODO: fix this whole thing up so weird stuff like this doesn't happen
                 event.reply("When configuring for the first time you must include all options, except remove role.").queue();
                 return;
             }
