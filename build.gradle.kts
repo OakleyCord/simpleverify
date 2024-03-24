@@ -13,7 +13,7 @@ tasks {
     named<ShadowJar>("shadowJar") {
         mergeServiceFiles()
         manifest {
-            attributes(mapOf("Main-Class" to "dev.oakleycord.simpleverify.Main"))
+            attributes(mapOf("Main-Class" to "dev.oakleycord.simpleverify.SimpleVerifyMain"))
         }
     }
 }

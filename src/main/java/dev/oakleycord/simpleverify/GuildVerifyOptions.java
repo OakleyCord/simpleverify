@@ -8,16 +8,14 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 public class GuildVerifyOptions {
     private final long guildID;
-
+    private String verifyMessage;
     private long channelID, logChannelID, roleID, removeRoleID;
 
-    private String verifyMessage;
-
-    public GuildVerifyOptions(Long guildID, Long channelID, long roleID, String verifyMessage) {
+    public GuildVerifyOptions(Long guildID, String verifyMessage, Long channelID, long roleID) {
         this.guildID = guildID;
+        this.verifyMessage = verifyMessage;
         this.channelID = channelID;
         this.roleID = roleID;
-        this.verifyMessage = verifyMessage;
     }
 
     public Guild getGuild(JDA jda) {
