@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 import java.awt.*;
+import java.util.List;
 
 public class Util {
 
@@ -18,11 +19,18 @@ public class Util {
 
         if(optionsBefore.equals(optionsAfter)) {
             embed.setDescription("No Difference.");
+            embed.setColor(Color.GRAY);
             return embed.build();
         }
 
-        if(!optionsBefore.getVerifyMessage().equals(optionsAfter.getVerifyMessage()))
-            embed.addField("Message", optionsBefore.getVerifyMessage() + " -> " + optionsAfter.getVerifyMessage(), false);
+        if(!optionsBefore.getVerifyMessages().equals(optionsAfter.getVerifyMessages())) {
+            optionsBefore.getVerifyMessages().stream().filter(m -> !optionsAfter.getVerifyMessages().contains(m)).forEach( m ->
+                    embed.addField("Message", "-" + m, false)
+            );
+            optionsAfter.getVerifyMessages().stream().filter(m -> !optionsBefore.getVerifyMessages().contains(m)).forEach( m ->
+                    embed.addField("Message", "+" + m, false)
+            );
+        }
 
         if(optionsBefore.getChannelID() != optionsAfter.getChannelID())
             embed.addField(channelDiff(jda, optionsAfter.getGuildID(), "Channel", optionsBefore.getChannelID(), optionsAfter.getChannelID()));
@@ -36,8 +44,12 @@ public class Util {
         if(optionsBefore.getRemoveRoleID() != optionsAfter.getRemoveRoleID())
             embed.addField(roleDiff(jda, optionsAfter.getGuildID(), "Role", optionsBefore.getRemoveRoleID(), optionsAfter.getRemoveRoleID()));
 
+        if (optionsBefore.isCaseSensitive() != optionsAfter.isCaseSensitive())
+            embed.addField("Case Sensitive", optionsBefore.isCaseSensitive() + " -> " + optionsAfter.isCaseSensitive(), false);
+
         return embed.build();
     }
+
 
     private static MessageEmbed.Field channelDiff(JDA jda, long IDGuild, String name, long IDBefore, long IDAfter) {
         Guild guild = jda.getGuildById(IDGuild);
@@ -84,13 +96,20 @@ public class Util {
         embed.setTitle("SimpleVerify Configuration");
         embed.setColor(Color.WHITE);
 
-        String verifyMessage = options.getVerifyMessage();
+        List<String> verifyMessages = options.getVerifyMessages();
         TextChannel channel = options.getChannel(jda);
         TextChannel logChannel = options.getLogChannel(jda);
         Role role = options.getRole(jda);
         Role removeRole = options.getRemoveRole(jda);
+        boolean caseSensitive = options.isCaseSensitive();
 
-        embed.addField("Message", verifyMessage, false);
+        if (!verifyMessages.isEmpty())
+            for (int i = 0; i < verifyMessages.size(); i++)
+                embed.addField("Message", (i + 1) + ": " + verifyMessages.get(i), false);
+        else embed.addField("Message", "None", false);
+
+        embed.addField("Case Sensitive", Boolean.toString(caseSensitive), false);
+
         if (channel != null)
             embed.addField("Channel", channel.getAsMention(), false);
         else embed.addField("Channel", "None", false);

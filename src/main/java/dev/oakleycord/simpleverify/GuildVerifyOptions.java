@@ -6,11 +6,24 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class GuildVerifyOptions implements Cloneable {
     private final long guildID;
     private String verifyMessage;
+    private List<String> verifyMessages;
+
+    public boolean isCaseSensitive() {
+        return caseSensitive;
+    }
+
+    public void setCaseSensitive(boolean caseSensitive) {
+        this.caseSensitive = caseSensitive;
+    }
+
+    private boolean caseSensitive;
     private long channelID, logChannelID, roleID, removeRoleID;
 
     public GuildVerifyOptions(Long guildID, String verifyMessage, Long channelID, long roleID) {
@@ -18,6 +31,8 @@ public class GuildVerifyOptions implements Cloneable {
         this.verifyMessage = verifyMessage;
         this.channelID = channelID;
         this.roleID = roleID;
+        this.verifyMessages = new ArrayList<>();
+        this.caseSensitive = true;
     }
 
     public Guild getGuild(JDA jda) {
@@ -71,6 +86,7 @@ public class GuildVerifyOptions implements Cloneable {
     public void setLogChannelID(Long channelID) {
         this.logChannelID = channelID;
     }
+
     public String getVerifyMessage() {
         return verifyMessage;
     }
@@ -78,6 +94,19 @@ public class GuildVerifyOptions implements Cloneable {
     public void setVerifyMessage(String verifyMessage) {
         this.verifyMessage = verifyMessage;
     }
+
+    public void initMessages() {
+        verifyMessages = new ArrayList<>();
+    }
+
+    public List<String> getMutableMessages() {
+        return verifyMessages;
+    }
+
+    public List<String> getVerifyMessages() {
+        return new ArrayList<>(verifyMessages);
+    }
+
 
     public long getRemoveRoleID() {
         return removeRoleID;
@@ -98,7 +127,6 @@ public class GuildVerifyOptions implements Cloneable {
     public String toJson() {
         Gson gson = new Gson();
         return gson.toJson(this);
-
     }
     public static GuildVerifyOptions fromJson(String string) {
         Gson gson = new Gson();
@@ -109,19 +137,21 @@ public class GuildVerifyOptions implements Cloneable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        GuildVerifyOptions options = (GuildVerifyOptions) o;
-        return getGuildID() == options.getGuildID() && getChannelID() == options.getChannelID() && getLogChannelID() == options.getLogChannelID() && getRoleID() == options.getRoleID() && getRemoveRoleID() == options.getRemoveRoleID() && Objects.equals(getVerifyMessage(), options.getVerifyMessage());
+        GuildVerifyOptions that = (GuildVerifyOptions) o;
+        return getGuildID() == that.getGuildID() && isCaseSensitive() == that.isCaseSensitive() && getChannelID() == that.getChannelID() && getLogChannelID() == that.getLogChannelID() && getRoleID() == that.getRoleID() && getRemoveRoleID() == that.getRemoveRoleID() && Objects.equals(getVerifyMessage(), that.getVerifyMessage()) && Objects.equals(getVerifyMessages(), that.getVerifyMessages());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getGuildID(), getVerifyMessage(), getChannelID(), getLogChannelID(), getRoleID(), getRemoveRoleID());
+        return Objects.hash(getGuildID(), getVerifyMessage(), getVerifyMessages(), isCaseSensitive(), getChannelID(), getLogChannelID(), getRoleID(), getRemoveRoleID());
     }
 
     @Override
     public GuildVerifyOptions clone() {
         try {
-            return (GuildVerifyOptions) super.clone();
+            GuildVerifyOptions options = (GuildVerifyOptions) super.clone();
+            options.verifyMessages = new ArrayList<>(verifyMessages);
+            return options;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }

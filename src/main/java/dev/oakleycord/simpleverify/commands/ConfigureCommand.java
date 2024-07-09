@@ -21,12 +21,15 @@ import java.util.List;
 public class ConfigureCommand extends SVSlashCommand {
 
     private final String MESSAGE_OPTION = "message";
+    private final String REMOVE_MESSAGE_OPTION = "removemessage";
     private final String CHANNEL_OPTION = "channel";
     private final String LOG_CHANNEL_OPTION = "logchannel";
 
     private final String ROLE_OPTION = "role";
 
     private final String REMOVE_ROLE_OPTION = "removerole";
+
+    private final String CASE_SENSITIVE =  "casesensitive";
 
 
     @Override
@@ -50,13 +53,15 @@ public class ConfigureCommand extends SVSlashCommand {
     @Override
     public OptionData[] getOptions() {
         return new OptionData[]{
-                new OptionData(OptionType.STRING, MESSAGE_OPTION, "The message used for verification."),
+                new OptionData(OptionType.STRING, MESSAGE_OPTION, "Adds a message used for verification."),
+                new OptionData(OptionType.INTEGER, REMOVE_MESSAGE_OPTION, "Removes a message from the list of messages used for verification, use the number in the list."),
                 new OptionData(OptionType.CHANNEL, CHANNEL_OPTION, "The channel to watch for messages.")
                         .setChannelTypes(ChannelType.TEXT),
                 new OptionData(OptionType.CHANNEL, LOG_CHANNEL_OPTION, "The channel to log verifications.")
                         .setChannelTypes(ChannelType.TEXT),
                 new OptionData(OptionType.ROLE, ROLE_OPTION, "The role to give to verified users."),
-                new OptionData(OptionType.ROLE, REMOVE_ROLE_OPTION, "The role to remove once verified.")
+                new OptionData(OptionType.ROLE, REMOVE_ROLE_OPTION, "The role to remove once verified."),
+                new OptionData(OptionType.BOOLEAN, CASE_SENSITIVE, "Changes if verified messages should be case sensitive.")
         };
     }
 
@@ -85,6 +90,8 @@ public class ConfigureCommand extends SVSlashCommand {
 
         String message = null;
 
+        int removeMessage = -1;
+
         TextChannel channel = null;
 
         TextChannel logChannel = null;
@@ -93,13 +100,17 @@ public class ConfigureCommand extends SVSlashCommand {
 
         Role removeRole = null;
 
+        Boolean caseSensitive = null;
+
 
         if (event.getOption(MESSAGE_OPTION) != null)
             message = event.getOption(MESSAGE_OPTION).getAsString();
 
+        if (event.getOption(REMOVE_MESSAGE_OPTION) != null)
+            removeMessage = event.getOption(REMOVE_MESSAGE_OPTION).getAsInt();
+
         if (event.getOption(CHANNEL_OPTION) != null)
             channel = event.getOption(CHANNEL_OPTION).getAsChannel().asTextChannel();
-
 
         if (event.getOption(LOG_CHANNEL_OPTION) != null)
             logChannel = event.getOption(LOG_CHANNEL_OPTION).getAsChannel().asTextChannel();
@@ -109,6 +120,10 @@ public class ConfigureCommand extends SVSlashCommand {
 
         if (event.getOption(REMOVE_ROLE_OPTION) != null) 
             removeRole = event.getOption(REMOVE_ROLE_OPTION).getAsRole();
+
+        if (event.getOption(CASE_SENSITIVE) != null)
+            caseSensitive = event.getOption(CASE_SENSITIVE).getAsBoolean();
+
 
 
         List<GuildVerifyOptions> guilds = SimpleVerifyMain.getGuilds();
@@ -129,7 +144,16 @@ public class ConfigureCommand extends SVSlashCommand {
         GuildVerifyOptions beforeOptions = options.clone();
 
         if (message != null)
-            options.setVerifyMessage(message);
+            options.getMutableMessages().add(message);
+
+        if (removeMessage != -1) {
+            try {
+                options.getMutableMessages().remove(removeMessage - 1);
+            } catch (Exception ex) {
+                event.reply("Error occurred during removing message, (maybe set number to non existent message)").queue();
+            }
+        }
+
 
         if (channel != null)
             options.setChannelID(channel.getIdLong());
@@ -142,6 +166,9 @@ public class ConfigureCommand extends SVSlashCommand {
 
         if (removeRole != null)
             options.setRemoveRoleID(removeRole.getIdLong());
+
+        if (caseSensitive != null)
+            options.setCaseSensitive(caseSensitive);
 
         SimpleVerifyMain.saveGuilds();
         event.replyEmbeds(Util.createDiffMessage(event.getJDA(), beforeOptions, options)).queue();

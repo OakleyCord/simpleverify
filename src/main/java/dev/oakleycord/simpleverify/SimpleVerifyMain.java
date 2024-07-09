@@ -39,6 +39,8 @@ public class SimpleVerifyMain extends ListenerAdapter {
                 .load();
         loadGuilds();
 
+        migrateGuilds();
+
         String token = dotenv.get("BOT_TOKEN");
 
         if (token == null || token.isEmpty())
@@ -80,6 +82,16 @@ public class SimpleVerifyMain extends ListenerAdapter {
 
     public static List<GuildVerifyOptions> getGuilds(){
         return GUILDS;
+    }
+
+    public static void migrateGuilds() {
+        GUILDS.forEach(g -> {
+            if (g.getMutableMessages() == null)
+                g.initMessages();
+            if (g.getVerifyMessage() != null)
+                g.getMutableMessages().add(g.getVerifyMessage());
+            g.setVerifyMessage(null);
+        });
     }
 
     public static void loadGuilds() {
@@ -133,8 +145,11 @@ public class SimpleVerifyMain extends ListenerAdapter {
 
         event.getMessage().delete().queue();
 
-        if (!message.equals(options.getVerifyMessage()))
-            return;
+        if (options.getVerifyMessages().stream().noneMatch(m -> {
+            if(options.isCaseSensitive())
+                return m.equals(message);
+            else return m.equalsIgnoreCase(message);
+        })) return;
 
         String mention = event.getAuthor().getAsMention();
 
